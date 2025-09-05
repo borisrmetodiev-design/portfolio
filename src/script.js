@@ -59,15 +59,14 @@ titleWrapper.addEventListener('mouseleave', () => {
   titleText.style.transform = 'translate(0,0) rotate(0deg)';
 });
 
-// sidebar
+// sidebar functionality
 
 const sidebar = document.querySelector('.sidebar');
-let sidebarVisible = false;
 let mouseNearEdge = false;
 
 // Show sidebar when mouse is near the left edge
 document.addEventListener('mousemove', (e) => {
-  if (e.clientX <= 10) {
+  if (e.clientX <= 20) {
     mouseNearEdge = true;
     sidebar.classList.add('visible');
   } else if (!sidebar.matches(':hover')) {
@@ -80,8 +79,17 @@ document.addEventListener('mousemove', (e) => {
 sidebar.addEventListener('mouseenter', () => {
   sidebar.classList.add('visible');
 });
+
 sidebar.addEventListener('mouseleave', () => {
   if (!mouseNearEdge) {
     sidebar.classList.remove('visible');
   }
+});
+
+// Add click functionality to sidebar buttons
+document.querySelectorAll('.sidebar li').forEach((button, index) => {
+  button.addEventListener('click', () => {
+    console.log(`Sidebar button ${index + 1} clicked!`);
+    // Add your button functionality here
+  });
 });
