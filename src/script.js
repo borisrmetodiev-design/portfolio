@@ -58,38 +58,3 @@ titleWrapper.addEventListener('mouseleave', () => {
   // Then let it transition smoothly back to neutral
   titleText.style.transform = 'translate(0,0) rotate(0deg)';
 });
-
-// sidebar functionality
-
-const sidebar = document.querySelector('.sidebar');
-let mouseNearEdge = false;
-
-// Show sidebar when mouse is near the left edge
-document.addEventListener('mousemove', (e) => {
-  if (e.clientX <= 20) {
-    mouseNearEdge = true;
-    sidebar.classList.add('visible');
-  } else if (!sidebar.matches(':hover')) {
-    mouseNearEdge = false;
-    sidebar.classList.remove('visible');
-  }
-});
-
-// Keep sidebar open if mouse is over it
-sidebar.addEventListener('mouseenter', () => {
-  sidebar.classList.add('visible');
-});
-
-sidebar.addEventListener('mouseleave', () => {
-  if (!mouseNearEdge) {
-    sidebar.classList.remove('visible');
-  }
-});
-
-// Add click functionality to sidebar buttons
-document.querySelectorAll('.sidebar li').forEach((button, index) => {
-  button.addEventListener('click', () => {
-    console.log(`Sidebar button ${index + 1} clicked!`);
-    // Add your button functionality here
-  });
-});
