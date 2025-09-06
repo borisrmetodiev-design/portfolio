@@ -15,7 +15,7 @@
                         <h1 class="title-name">Boris Metodiev</h1>
                     </div>
                     <div class="title-buttons">
-                        <button id="btn1" class="hover-underline-animation left">Button 1</button>
+                        <button id="btn1" class="hover-underline-animation left">Skills</button>
                         <button id="btn2" class="hover-underline-animation center">Button 2</button>
                         <button id="btn3" class="hover-underline-animation right">Button 3</button>
                     </div>
@@ -43,10 +43,43 @@
         </header>
     </div>
 
-    <div class="scrollbar">
-        <div class="scroll-thumb"></div>
+    <!-- Skills Section -->
+    <section id="skills" class="skills-section">
+        <div class="skills-container">
+            <h2 class="skills-title">My Skills</h2>
+            <div class="skills-grid" id="skillsGrid">
+                <!-- Skills will be dynamically generated here by script.js -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Individual Skill Modals -->
+    <div id="skillModal" class="skill-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalSkillTitle">Skill Details</h2>
+                <button class="close-btn" id="closeSkillModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="skill-detail-logo">
+                    <img id="modalSkillLogo" src="" alt="">
+                </div>
+                <div class="skill-detail-content">
+                    <p id="modalSkillDescription"></p>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- <div class="scrollbar">
+        <div class="scroll-thumb"></div>
+    </div> -->
+
+    <!-- Blob Cursor -->
+    <div class="blob-cursor">
+        <div class="blob-inner"></div>
+    </div>
 
     <script src="script.js"></script>
 </body>
