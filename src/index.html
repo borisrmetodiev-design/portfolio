@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="main">
+    <div class="main" id="cursor">
         <header>
             <div class="title-bar glass">
                 <div class="title-content">
@@ -47,8 +47,8 @@
     <section id="skills" class="skills-section">
         <div class="skills-container">
             <h2 class="skills-title">My Skills</h2>
-            <div class="skills-grid" id="skillsGrid">
-                <!-- Skills will be dynamically generated here by script.js -->
+            <div class="skills-categories" id="skillsCategories">
+                <!-- Skills categories will be dynamically generated here by script.js -->
             </div>
         </div>
     </section>
@@ -76,11 +76,13 @@
         <div class="scroll-thumb"></div>
     </div> -->
 
-    <!-- Blob Cursor -->
-    <div class="blob-cursor">
-        <div class="blob-inner"></div>
-    </div>
+<!-- Blob cursor -->
+<div class="blob-cursor">
+    <div class="blob-inner"></div>
+  </div>
 
-    <script src="script.js"></script>
+  <script src="script.js" defer></script>
+
 </body>
+
 </html>

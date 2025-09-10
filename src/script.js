@@ -1,16 +1,26 @@
-// Srolling title bar functionality
+// Title bar functionality
 let lastScroll = 0;
 const header = document.querySelector('.title-bar');
 
+// Show title bar on mouse hover at top of page
+document.addEventListener('mousemove', (e) => {
+  if (e.clientY < 50) {
+    header.classList.add('visible');
+  } else if (window.pageYOffset > 100) {
+    header.classList.remove('visible');
+  }
+});
+
+// Hide title bar when scrolling down, show when scrolling up
 window.addEventListener('scroll', () => {
   const currentScroll = window.pageYOffset;
 
-  if (currentScroll > lastScroll) {
+  if (currentScroll > lastScroll && currentScroll > 100) {
     // Scrolling down → hide header
-    header.style.top = '-60px';
-  } else {
+    header.classList.remove('visible');
+  } else if (currentScroll < lastScroll) {
     // Scrolling up → show header
-    header.style.top = '0';
+    header.classList.add('visible');
   }
 
   lastScroll = currentScroll;
@@ -71,7 +81,7 @@ titleWrapper.addEventListener('mouseleave', () => {
 document.addEventListener('DOMContentLoaded', () => {
   const skillModal = document.getElementById('skillModal');
   const closeBtn = document.getElementById('closeSkillModal');
-  const skillsGrid = document.getElementById('skillsGrid');
+  const skillsCategories = document.getElementById('skillsCategories');
   let skillsData = [];
 
   // Fetch skills from JSON
@@ -79,59 +89,110 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(response => response.json())
     .then(data => {
       skillsData = data;
-      renderSkillsGrid(skillsData);
+      renderSkillsCategories(skillsData.categories);
       setupSkillIcons();
     });
 
-  function renderSkillsGrid(skills) {
-    skillsGrid.innerHTML = '';
-    skills.forEach(skill => {  // afk
-      const div = document.createElement('div');
-      div.className = 'skill-icon';
-      div.setAttribute('data-skill', skill.id);
-      div.innerHTML = `
-        <img src="${skill.icon}" alt="${skill.name}">
-        <span>${skill.name}</span>
+  function renderSkillsCategories(categories) {
+    skillsCategories.innerHTML = '';
+    categories.forEach(category => {
+      const categoryDiv = document.createElement('div');
+      categoryDiv.className = 'skill-category';
+      categoryDiv.setAttribute('data-category', category.id);
+      categoryDiv.innerHTML = `
+        <div class="category-header">
+          <h3 class="category-title">${category.name}</h3>
+          <p class="category-description">${category.description}</p>
+        </div>
+        <div class="category-skills" id="category-${category.id}">
+          ${category.skills.map(skill => `
+            <div class="skill-icon" data-skill="${skill.id}">
+              <img src="${skill.icon}" alt="${skill.name}">
+              <span>${skill.name}</span>
+            </div>
+          `).join('')}
+        </div>
       `;
-      skillsGrid.appendChild(div);
+      skillsCategories.appendChild(categoryDiv);
     });
   }
 
   function setupSkillIcons() {
     const skillIcons = document.querySelectorAll('.skill-icon');
     skillIcons.forEach(icon => {
-      icon.addEventListener('click', () => {
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent category expansion when clicking skill icons
         const skillId = icon.getAttribute('data-skill');
-        const skill = skillsData.find(s => s.id === skillId);
+        // Find the skill across all categories
+        let skill = null;
+        for (const category of skillsData.categories) {
+          skill = category.skills.find(s => s.id === skillId);
+          if (skill) break;
+        }
+        
         if (skill) {
           document.getElementById('modalSkillTitle').textContent = skill.name;
           document.getElementById('modalSkillLogo').src = skill.icon;
           document.getElementById('modalSkillLogo').alt = skill.name;
           document.getElementById('modalSkillDescription').textContent = skill.description;
+          skillModal.style.display = 'flex';
+          skillModal.classList.remove('closing');
           skillModal.classList.add('active');
           document.body.style.overflow = 'hidden';
         }
       });
     });
+
+    // Add category expansion functionality
+    const categoryContainers = document.querySelectorAll('.skill-category');
+    categoryContainers.forEach(container => {
+      container.addEventListener('click', () => {
+        // Remove expanded class from all other categories
+        categoryContainers.forEach(cat => {
+          if (cat !== container) {
+            cat.classList.remove('expanded');
+          }
+        });
+        
+        // Toggle expanded class on clicked category
+        container.classList.toggle('expanded');
+      });
+    });
   }
 
   // Close modal functionality
-  function closeModal() {
-    skillModal.classList.remove('active');
-    document.body.style.overflow = 'auto';
-  }
-  closeBtn.addEventListener('click', closeModal);
-  skillModal.addEventListener('click', (e) => {
-    if (e.target === skillModal || e.target.classList.contains('modal-backdrop')) {
-      closeModal();
+function closeModal() {
+  skillModal.classList.add('closing');
+  skillModal.classList.remove('active');
+
+  // Wait for animation to complete before hiding (match modalPopOut 0.6s)
+  const handleAnimationEnd = (e) => {
+    if (e.target.classList.contains('modal-content')) {
+      skillModal.style.display = 'none';
+      skillModal.classList.remove('closing');
+      document.body.style.overflow = 'auto';
+
+      // Remove listener so it doesn't fire multiple times
+      skillModal.removeEventListener('animationend', handleAnimationEnd);
     }
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && skillModal.classList.contains('active')) {
-      closeModal();
+  };
+
+  skillModal.addEventListener('animationend', handleAnimationEnd);
+}
+
+closeBtn.addEventListener('click', closeModal);
+skillModal.addEventListener('click', (e) => {
+  if (e.target === skillModal || e.target.classList.contains('modal-backdrop')) {
+    closeModal();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && skillModal.classList.contains('active')) {
+    closeModal();
     }
   });
 });
+
 
 // Blob Cursor functionality
 document.addEventListener('DOMContentLoaded', () => {
@@ -145,6 +206,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let isHovering = false;
   let lastDistance = 0;
   let snapThreshold = 8; // Distance threshold for snap wiggle
+  let clickScale = 1; // scale factor applied to whole cursor during click
+  let clickTimeout1 = null;
+  let clickTimeout2 = null;
   
   // Smooth mouse tracking with lag
   function updateBlobPosition() {
@@ -201,8 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     lastDistance = distance;
     
-    // Apply position with smooth easing
-    blobCursor.style.transform = `translate(${blobX}px, ${blobY}px) translate(-50%, -50%)`;
+    // Apply position with smooth easing (compose click scale)
+    blobCursor.style.transform = `translate(${blobX}px, ${blobY}px) translate(-50%, -50%) scale(${clickScale})`;
     
     // Continue animation
     requestAnimationFrame(updateBlobPosition);
@@ -213,53 +277,90 @@ document.addEventListener('DOMContentLoaded', () => {
     mouseX = e.clientX;
     mouseY = e.clientY;
   });
-  
-  // Hover effects
-  document.addEventListener('mouseenter', (e) => {
-    if (e.target.matches('a, .skill-icon')) {
-      // Links and skill icons get red/orange color with random rotation
-      const randomRot1 = (Math.random() - 0.5) * 20; // -10 to 10 degrees
-      const randomRot2 = (Math.random() - 0.5) * 20; // -10 to 10 degrees
-      const randomRot3 = (Math.random() - 0.5) * 20; // -10 to 10 degrees
-      
-      console.log('Random rotations:', randomRot1, randomRot2, randomRot3);
-      
-      // Create dynamic keyframes
-      const style = document.createElement('style');
-      style.textContent = `
-        @keyframes randomWiggle {
-          0% { transform: scale(1) rotate(0deg); }
-          25% { transform: scale(1.1) rotate(${randomRot1}deg); }
-          50% { transform: scale(1.2) rotate(${randomRot2}deg); }
-          75% { transform: scale(1.1) rotate(${randomRot3}deg); }
-          100% { transform: scale(1) rotate(0deg); }
-        }
-      `;
-      document.head.appendChild(style);
-      
-      // Apply the animation
-      blobCursor.classList.add('link-hover');
-      blobCursor.querySelector('.blob-inner').style.animation = 'randomWiggle 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-      
-      // Clean up old styles
-      setTimeout(() => {
-        if (document.head.contains(style)) {
-          document.head.removeChild(style);
-        }
-      }, 500);
-    } else if (e.target.matches('button, .close-btn')) {
-      // Other interactive elements get green color
-      blobCursor.classList.add('hover');
+
+  // Click pulse animation (force restart) and container scale
+  document.addEventListener('mousedown', () => {
+    blobCursor.classList.add('click');
+    // force restart the inner click animation on repeated clicks
+    blobInner.style.animation = 'none';
+    void blobInner.offsetWidth; // reflow
+    blobInner.style.animation = 'clickPulse 0.4s ease';
+
+    // Clear any pending scale timers
+    if (clickTimeout1) clearTimeout(clickTimeout1);
+    if (clickTimeout2) clearTimeout(clickTimeout2);
+
+    // Shrink → overshoot → settle
+    clickScale = 0.85;
+    clickTimeout1 = setTimeout(() => {
+      clickScale = 1.1;
+    }, 120);
+    clickTimeout2 = setTimeout(() => {
+      clickScale = 1;
+    }, 280);
+  });
+
+  // Restore idle pulse and clear click state
+  blobInner.addEventListener('animationend', (e) => {
+    if (e.animationName === 'clickPulse') {
+      blobCursor.classList.remove('click');
+      // keep idle stable (no pulse)
+      blobInner.style.animation = 'none';
     }
   });
-  
-  document.addEventListener('mouseleave', (e) => {
-    if (e.target.matches('a, .skill-icon')) {
-      blobCursor.classList.remove('link-hover');
-    } else if (e.target.matches('button, .close-btn')) {
-      blobCursor.classList.remove('hover');
-    }
+
+  document.addEventListener('mouseup', () => {
+    blobCursor.classList.remove('click');
   });
+  
+// Hover effects
+document.addEventListener('mouseenter', (e) => {
+  if (e.target.matches('a, .skill-icon')) {
+    // Links and skill icons get red/orange color with random rotation
+    const randomRot1 = (Math.random() - 0.5) * 20; // -10 to 10 degrees
+    const randomRot2 = (Math.random() - 0.5) * 20; // -10 to 10 degrees
+    const randomRot3 = (Math.random() - 0.5) * 20; // -10 to 10 degrees
+
+    console.log('Random rotations:', randomRot1, randomRot2, randomRot3);
+
+    // Create dynamic keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes randomWiggle {
+        0% { transform: scale(1) rotate(0deg); }
+        25% { transform: scale(1.1) rotate(${randomRot1}deg); }
+        50% { transform: scale(1.2) rotate(${randomRot2}deg); }
+        75% { transform: scale(1.1) rotate(${randomRot3}deg); }
+        100% { transform: scale(1) rotate(0deg); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Apply the animation
+    blobCursor.classList.add('link-hover');
+    blobCursor.querySelector('.blob-inner').style.animation = 'randomWiggle 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+
+    // Clean up old styles
+    setTimeout(() => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    }, 500);
+
+  } else if (e.target.matches('button:not(.scroll-top-btn), .close-btn')) {
+    // Other interactive elements (excluding scroll button) get green color
+    blobCursor.classList.add('hover');
+  }
+});
+
+document.addEventListener('mouseleave', (e) => {
+  if (e.target.matches('a, .skill-icon')) {
+    blobCursor.classList.remove('link-hover');
+  } else if (e.target.matches('button:not(.scroll-top-btn), .close-btn')) {
+    blobCursor.classList.remove('hover');
+  }
+});
+
   
   // Initialize blob position
   blobX = window.innerWidth / 2;
@@ -293,3 +394,4 @@ document.addEventListener('DOMContentLoaded', () => {
     blobCursor.style.opacity = '1';
   });
 });
+
