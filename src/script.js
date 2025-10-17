@@ -1,3 +1,5 @@
+gsap.registerPlugin(ScrollTrigger);
+
 // Title bar functionality
 let lastScroll = 0;
 const header = document.querySelector('.title-bar');
@@ -395,3 +397,306 @@ document.addEventListener('mouseleave', (e) => {
   });
 });
 
+// ScrollFloat Animation for "My Skills" title
+function initScrollFloatTitle() {
+  const skillsTitle = document.querySelector('.skills-title');
+  if (!skillsTitle) return;
+
+  // Split text into individual characters
+  const text = skillsTitle.textContent;
+  skillsTitle.innerHTML = '';
+  
+  const wrapper = document.createElement('span');
+  wrapper.className = 'scroll-float-text';
+  
+  text.split('').forEach((char, index) => {
+    const span = document.createElement('span');
+    span.className = 'char';
+    span.textContent = char === ' ' ? '\u00A0' : char;
+    wrapper.appendChild(span);
+  });
+  
+  skillsTitle.appendChild(wrapper);
+
+  // GSAP ScrollTrigger animation for title - NO SCRUB, fixed duration
+  const chars = skillsTitle.querySelectorAll('.char');
+  
+  gsap.fromTo(
+    chars,
+    {
+      willChange: 'opacity, transform',
+      opacity: 0,
+      yPercent: 120,
+      scaleY: 2.3,
+      scaleX: 0.7,
+      transformOrigin: '50% 0%'
+    },
+    {
+      duration: 1.5, // Longer duration for smoother motion
+      ease: 'power3.inOut',
+      opacity: 1,
+      yPercent: 0,
+      scaleY: 1,
+      scaleX: 1,
+      stagger: {
+        each: 0.05, // More stagger between chars
+        from: 'start'
+      },
+      scrollTrigger: {
+        trigger: skillsTitle,
+        start: 'top bottom-=100px',
+        toggleActions: 'play none none reverse',
+        once: false
+      }
+    }
+  );
+}
+
+// Simple fade + slide animation for skill cards with stagger per category
+function initSkillCardsAnimation() {
+  const skillCategories = document.querySelectorAll('.skill-category');
+  
+  // Animate all skill categories with stagger
+  gsap.fromTo(
+    skillCategories,
+    {
+      opacity: 0,
+      y: 30,
+      scale: 0.95
+    },
+    {
+      duration: 0.6,
+      ease: 'power2.out',
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      stagger: {
+        each: 0.2,
+        from: 'start'
+      },
+      scrollTrigger: {
+        trigger: '.skills-categories',
+        start: 'top bottom-=100px',
+        toggleActions: 'play none none reverse',
+        once: false
+      }
+    }
+  );
+  
+  skillCategories.forEach((category, categoryIndex) => {
+    const skillIcons = category.querySelectorAll('.skill-icon');
+    
+    gsap.fromTo(
+      skillIcons,
+      {
+        willChange: 'opacity, transform',
+        opacity: 0,
+        y: 40,
+        scale: 0.9
+      },
+      {
+        duration: 0.5,
+        ease: 'power2.out',
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        stagger: {
+          each: 0.06,
+          from: 'start'
+        },
+        scrollTrigger: {
+          trigger: category,
+          start: 'top bottom-=100px',
+          toggleActions: 'play none none reverse',
+          once: false
+        }
+      }
+    );
+
+    // Add hover animation enhancement
+    skillIcons.forEach(icon => {
+      icon.addEventListener('mouseenter', () => {
+        gsap.to(icon, {
+          duration: 0.4,
+          scale: 1.15,
+          y: -10,
+          ease: 'back.out(2)',
+          overwrite: true
+        });
+      });
+
+      icon.addEventListener('mouseleave', () => {
+        gsap.to(icon, {
+          duration: 0.3,
+          scale: 1,
+          y: 0,
+          ease: 'power2.out',
+          overwrite: true
+        });
+      });
+    });
+  });
+}
+
+// Animate category headers separately with stagger
+function initCategoryHeadersAnimation() {
+  const categoryHeaders = document.querySelectorAll('.category-header');
+  
+  // Animate all titles with stagger
+  gsap.fromTo(
+    categoryHeaders,
+    {
+      opacity: 0,
+      y: 50
+    },
+    {
+      duration: 0.5, // Faster
+      ease: 'power2.out',
+      opacity: 1,
+      y: 0,
+      stagger: {
+        each: 0.15,
+        from: 'start'
+      },
+      scrollTrigger: {
+        trigger: '.skills-categories',
+        start: 'top bottom-=50px',
+        toggleActions: 'play none none reverse',
+        once: false
+      }
+    }
+  );
+
+  // Animate descriptions with stagger
+  categoryHeaders.forEach((header, index) => {
+    const description = header.querySelector('.category-description');
+    
+    gsap.fromTo(
+      description,
+      {
+        opacity: 0,
+        y: 20
+      },
+      {
+        duration: 0.4,
+        delay: 0.1 + (index * 0.15), // Stagger based on category index
+        ease: 'power2.out',
+        opacity: 1,
+        y: 0,
+        scrollTrigger: {
+          trigger: '.skills-categories',
+          start: 'top bottom-=50px',
+          toggleActions: 'play none none reverse',
+          once: false
+        }
+      }
+    );
+  });
+}
+
+// Initialize all animations after DOM and skills data are loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Wait for skills to be loaded from JSON
+  const checkSkillsLoaded = setInterval(() => {
+    const skillsCategories = document.querySelector('#skillsCategories');
+    if (skillsCategories && skillsCategories.children.length > 0) {
+      clearInterval(checkSkillsLoaded);
+      
+      // Initialize animations
+      initScrollFloatTitle();
+      initSkillCardsAnimation();
+      initCategoryHeadersAnimation();
+      initModalAnimation();
+    }
+  }, 100);
+
+  // Timeout after 5 seconds if skills don't load
+  setTimeout(() => {
+    clearInterval(checkSkillsLoaded);
+  }, 5000);
+});
+
+// Animate modal opening with stagger
+function initModalAnimation() {
+  const skillModal = document.getElementById('skillModal');
+  if (!skillModal) return;
+
+  // Store original click handler
+  const skillIcons = document.querySelectorAll('.skill-icon');
+  
+  skillIcons.forEach(icon => {
+    icon.addEventListener('click', () => {
+      // Small delay to let modal display first
+      setTimeout(() => {
+        const modalContent = skillModal.querySelector('.modal-content');
+        const modalHeader = skillModal.querySelector('.modal-header');
+        const modalLogo = skillModal.querySelector('.skill-detail-logo');
+        const modalDescription = skillModal.querySelector('.skill-detail-content');
+        
+        // Animate modal elements with stagger
+        gsap.fromTo(
+          modalContent,
+          {
+            scale: 0.8,
+            opacity: 0,
+            y: 50
+          },
+          {
+            duration: 0.7,
+            ease: 'back.out(1.7)',
+            scale: 1,
+            opacity: 1,
+            y: 0
+          }
+        );
+
+        gsap.fromTo(
+          modalHeader,
+          {
+            opacity: 0,
+            y: -20
+          },
+          {
+            duration: 0.6,
+            delay: 0.15,
+            ease: 'power2.out',
+            opacity: 1,
+            y: 0
+          }
+        );
+
+        gsap.fromTo(
+          modalLogo,
+          {
+            opacity: 0,
+            scale: 0.5,
+            rotation: -180
+          },
+          {
+            duration: 1,
+            delay: 0.25,
+            ease: 'back.out(2)',
+            opacity: 1,
+            scale: 1,
+            rotation: 0
+          }
+        );
+
+        gsap.fromTo(
+          modalDescription,
+          {
+            opacity: 0,
+            y: 20
+          },
+          {
+            duration: 0.7,
+            delay: 0.4,
+            ease: 'power2.out',
+            opacity: 1,
+            y: 0
+          }
+        );
+      }, 50);
+    });
+  });
+}

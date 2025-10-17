@@ -301,8 +301,9 @@ body, * {
 }
 
 .skills-title {
-  font-size: 3rem;
-  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  font-size: 4rem;
+  font-weight: 800;
   color: white;
   margin-bottom: 3rem;
   position: relative;
@@ -1010,3 +1011,87 @@ body, * {
   color: whitesmoke;
 }
 
+/* ScrollFloat Text Styles */
+.skills-title {
+  overflow: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.scroll-float-text {
+  display: inline-block;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.scroll-float-text .char {
+  display: inline-block;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Enhanced skill card animations */
+.skill-icon {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* Category animations */
+.category-header {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.category-title,
+.category-description {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* Smooth transitions for interactive elements */
+.skill-category {
+  will-change: transform, background, border-color;
+  backface-visibility: hidden;
+}
+
+/* Performance optimization */
+.skill-icon img {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Ensure smooth scrolling for animations */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Optional: Add a subtle glow effect to animated elements */
+.scroll-float-text .char {
+  text-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
+  transition: text-shadow 0.3s ease;
+}
+
+.skills-title:hover .scroll-float-text .char {
+  text-shadow: 0 0 30px rgba(79, 70, 229, 0.6);
+}
+
+/* Improve skill icon 3D effect */
+.skill-icon::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 10px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.3) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.skill-icon:hover::after {
+  opacity: 1;
+}
